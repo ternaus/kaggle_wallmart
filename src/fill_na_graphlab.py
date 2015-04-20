@@ -55,7 +55,7 @@ def fill_missed_all(df, features, verbose=False, summary=True):
     list_with_na = []
     features_new = features[:]
 
-    for column in features:              
+    for column in features:                      
         num_na = sum(df[column].apply(lambda x: np.isnan(x)))
         print column, num_na
         if num_na > 0:
@@ -71,7 +71,11 @@ def fill_missed_all(df, features, verbose=False, summary=True):
     temp_df = df
     for i, column in list_with_na:
         print "filling " + column + " na = " + str(i)
+        a = temp_df[column].apply(lambda x: np.isnan(x)).astype(int)        
+
         temp_df = fill_missed(temp_df, column, features, verbose=verbose, summary=summary)
+        temp_df[ column + "NAN" ] = a
         features += [column]
+        features += [column+"NAN"]
 
     return temp_df
