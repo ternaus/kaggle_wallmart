@@ -17,8 +17,9 @@ from sklearn.cross_validation import StratifiedKFold
 import math
 from sklearn.grid_search import RandomizedSearchCV
 # from sklearn.ensemble import RandomForestClassifier
+import math
 
-weather = pd.read_csv('../data/weather_filled_gl300_md10.csv')
+weather = pd.read_csv('../data/weather_new_md10.csv')
 train = pd.read_csv('../data/train.csv')
 key = pd.read_csv('../data/key.csv')
 # test = pd.read_csv('../data/test.csv')
@@ -27,9 +28,8 @@ key = pd.read_csv('../data/key.csv')
 training = train.merge(key)
 training = training.merge(weather)
 
-target = training["units"].values
-
-training = training.drop(["units", "date"], 1).values
+target = training["units"].apply(lambda x: math.log(1 + x))
+training = training.drop(["units", "date", 'month', 'day'], 1).values
 # testing = test.drop("id", 1)
 
 
@@ -61,6 +61,6 @@ param_dist = {"n_estimators": [10, 20, 30],
               # "min_samples_leaf": sp_randint(1, 11),
               }
 
-random_search = RandomizedSearchCV(clf, param_dist, random_state=42, cv=5, verbose=3)
+random_search = RandomizedSearchCV(clf, param_dist, random_state=42, cv=3, verbose=3, scoring='mean_squared_error')
 fit = random_search.fit(training, target)
 report(fit.grid_scores_)
