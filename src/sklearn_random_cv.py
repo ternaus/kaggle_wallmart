@@ -35,7 +35,7 @@ training = training.drop(["units", "date", 'month', 'day'], 1).values
 
 from operator import itemgetter
 # Utility function to report best scores
-def report(grid_scores, n_top=5):
+def report(grid_scores, n_top=25):
     top_scores = sorted(grid_scores, key=itemgetter(1), reverse=True)[:n_top]
     for i, score in enumerate(top_scores):
         print("Model with rank: {0}".format(i + 1))
@@ -49,18 +49,18 @@ def report(grid_scores, n_top=5):
 from sklearn.grid_search import RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor
 
-clf = XGBRegressor()
-# clf = RandomForestRegressor(n_jobs=2)
+# clf = XGBRegressor()
+clf = RandomForestRegressor(n_jobs=-1)
 from scipy.stats import randint as sp_randint
 
 # print help(clf)
-param_dist = {"n_estimators": [10, 20, 30],
-              "max_depth": [None, 8, 10, 12, 20],
-              # "max_features": sp_randint(1, 11),
-              # "min_samples_split": sp_randint(1, 11),
-              # "min_samples_leaf": sp_randint(1, 11),
+param_dist = {"n_estimators": [200, 300],
+              "max_depth": [None, 20, 30],
+              "max_features": [8, 9, 10, 12],
+              "min_samples_split": [1, 2, 5, 4],
+              "min_samples_leaf": [5, 7, 8],
               }
 
-random_search = RandomizedSearchCV(clf, param_dist, random_state=42, cv=3, verbose=3, scoring='mean_squared_error')
+random_search = RandomizedSearchCV(clf, param_dist, random_state=42, cv=3, verbose=3, n_iter=20, scoring='mean_squared_error')
 fit = random_search.fit(training, target)
-report(fit.grid_scores_)
+report(fit.grid_scores_, 20)
