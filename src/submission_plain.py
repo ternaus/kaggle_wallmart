@@ -77,7 +77,7 @@ if model == 'rf':
                'n_estimators': 100,
                'max_depth': None,
                'min_samples_leaf': 7,
-               'n_jobs': 2,
+               'n_jobs': -1,
                'random_state': random_state}
 
     method = 'rf_{n_estimators}_max_features{max_features}_min_samples_split{min_samples_split}_max_depth{max_depth}_min_samples_leaf{min_samples_leaf}'.format(n_estimators=params['n_estimators'],  max_depth=params['max_depth'], min_samples_leaf=params['min_samples_leaf'], max_features=params['max_features'], min_samples_split=params['min_samples_split'])
@@ -108,9 +108,11 @@ elif model == 'svm':
     method = 'svm_{C}'.format(C=params['C'])
     clf = SVR(**params)
 
+print 'fit the model'
 
 fit = clf.fit(training, target)
 
+print 'calculating score'
 score = mean_squared_error(target, fit.predict(training))
 print score
 
