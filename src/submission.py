@@ -153,6 +153,6 @@ except:
 
 #save score to log
 fName = open(os.path.join('logs', method + '.log'), 'w')
-print >> fName, 'mean squared error on the training set is: ' + str(np.mean(a)) + ' std = ', + str(np.std(a))
+print >> fName, 'mean squared error on the training set is: ' + str(np.mean(a)) + ' std = ' + str(np.std(a))
 print >> fName, a
 fName.close()
