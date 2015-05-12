@@ -63,12 +63,13 @@ a = []
 def merge_data(df):
     return ''.join([str(df["store_nbr"]), "_", str(df["item_nbr"]), "_", df["date"]])
 
-def make_submission(m, test, filename):
-    prediction = m.predict(test)
+def make_submission(m, test1, filename):
+    prediction = m.predict(test1)
     submission = pd.DataFrame(prediction)
     submission.columns = ['units']
 
     submission['units'] = submission['units'].apply(lambda x: math.exp(x) - 1)
+    submission['id'] = test[["store_nbr", "item_nbr", "date"]].apply(merge_data)
     submission.to_csv(os.path.join('predictions', filename), index=False)
 
 try:
