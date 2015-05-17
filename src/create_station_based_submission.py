@@ -49,7 +49,7 @@ features = [
             'HZ',
             'FU',
             'UP',
-            'TSSN',
+            # 'TSSN',
             'VCTS',
             'DZ',
             'BR',
@@ -99,8 +99,9 @@ for station in range(1, 21):
                                            validation_set=None)
   prediction_testing = model.predict(test_x)
   temp = pd.DataFrame()
-  temp['id'] = test_x[["store_nbr", "item_nbr", "date"]].apply(merge_data)
   temp['units'] = prediction_testing
+  test_x_pd = test_x.to_dataframe()
+  temp['id'] = test_x_pd[["store_nbr", "item_nbr", "date"]].apply(merge_data)
 
   predictions += [temp]
 
