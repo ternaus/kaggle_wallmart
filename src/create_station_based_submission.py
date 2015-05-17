@@ -76,11 +76,19 @@ features = [
             'SG',
     'days']
 
+
+
 predictions = []
 for station in range(1, 21):
-  print 'station = ' + station
+  print 'station = ' + str(station)
   train_x = training[training['station_nbr'] == station]
   test_x = testing[testing['station_nbr'] == station]
+
+  for column in features:
+    a = train_x[column].mean()
+    train_x = train_x.fillna(column, a)
+    test_x = test_x.fillna(column, a)
+
   model = gl.boosted_trees_regression.create(train_x, target='units',
                                            features=features,
                                            max_iterations=300,
