@@ -22,7 +22,7 @@ from sklearn.metrics import mean_squared_error
 
 print 'reading train'
 
-weather = pd.read_csv('../data/weather_new_md10.csv')
+weather = pd.read_csv('../data/weather_new_mi100_md10.csv')
 train = pd.read_csv('../data/train.csv')
 key = pd.read_csv('../data/key.csv')
 training = train.merge(key)
@@ -30,7 +30,7 @@ training = training.merge(weather)
 
 
 target = training["units"].apply(lambda x: math.log(1 + x))
-training = training.drop(["units", "date", 'month', 'day'], 1).values
+training = training.drop(["units", "date", 'month', 'day', 'store_nbr', 'station_nbr', 'TSSN', 'SG', 'PRFG', 'GR'], 1).values
 
 scaler = StandardScaler()
 training = scaler.fit_transform(training)
@@ -40,7 +40,7 @@ test = pd.read_csv('../data/test.csv')
 
 testing = test.merge(key)
 testing = testing.merge(weather)
-testing = testing.drop(["date", 'month', 'day'], 1).values
+testing = testing.drop(["date", 'month', 'day', 'store_nbr', 'station_nbr', 'TSSN', 'SG', 'PRFG', 'GR'], 1).values
 
 testing = scaler.transform(testing)
 
@@ -50,10 +50,10 @@ n_folds = 10
 
 calibration_method = 'isotonic'
 
-model = 'rf' #RandomForest
+# model = 'rf' #RandomForest
 #model = 'gb' #GradientBoosting
-# model = 'xgb' #eXtremeGradient Boosting
-#model = 'xgbt'
+model = 'xgb' #eXtremeGradient Boosting
+# model = 'xgbt'
 #model = 'svm'
 
 skf = cross_validation.StratifiedKFold(target, n_folds=n_folds, random_state=random_state)

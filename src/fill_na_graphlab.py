@@ -28,9 +28,9 @@ def fill_missed(df, label, features, verbose=False, summary=True):
 
     model = gl.boosted_trees_regression.create(train, target=label,
                                                features=features,
-                                               # max_iterations=300,
+                                               max_iterations=100,
                                                verbose=verbose,
-                                               # max_depth=10,
+                                               max_depth=10,
                                                # step_size=0.1
                                                )
 
@@ -56,8 +56,8 @@ def fill_missed_all(df, features, verbose=False, summary=True):
     features_new = features[:]
 
     for column in features:                      
-        num_na = sum(df[column].astype(float).apply(lambda x: np.isnan(x)))
-        # num_na = sum(np.isnan(df[column]))
+        # num_na = sum(df[column].astype(float).apply(lambda x: np.isnan(x)))
+        num_na = sum(np.isnan(df[column]))
         print column, num_na
         if num_na > 0:
             list_with_na += [(num_na, column)]

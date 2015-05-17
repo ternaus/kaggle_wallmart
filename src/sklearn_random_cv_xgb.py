@@ -6,30 +6,45 @@ This script will do randomized search to find the best or almost the best parame
 for sklearn package
 '''
 
-# import xgboost as xgb
+import xgboost as xgb
 import pandas as pd
 import numpy as np
 
 from xgboost import XGBRegressor
 from sklearn import cross_validation
-# from sklearn.metrics import log_loss
 from sklearn.cross_validation import StratifiedKFold
 import math
 from sklearn.grid_search import RandomizedSearchCV
 # from sklearn.ensemble import RandomForestClassifier
 import math
+from sklearn.cross_validation import StratifiedKFold, StratifiedShuffleSplit
 
 weather = pd.read_csv('../data/weather_new3_md10.csv')
 train = pd.read_csv('../data/train.csv')
 key = pd.read_csv('../data/key.csv')
 # test = pd.read_csv('../data/test.csv')
 
-
 training = train.merge(key)
 training = training.merge(weather)
 
 target = training["units"].apply(lambda x: math.log(1 + x))
-training = training.drop(["units", "date", 'month', 'day'], 1).values
+training = training.drop(["units", "date"], 1).values
+
+def train_wm(X, y, params):
+    train_idx, eval_idx = next(iter(StratifiedShuffleSplit(y, 1, test_size=0.1, random_state=0)))
+    X_train, X_eval = X[train_idx], X[eval_idx]
+    y_train, y_eval = y[train_idx], y[eval_idx]
+    dtrain = xgb.DMatrix(X_train, label=y_train)
+    deval = xgb.DMatrix(X_eval, label=y_eval)
+    params['validation_set'] = deval
+    evals = dict()
+    watchlist = [ (dtrain, 'train'), (deval, 'eval') ]
+    return xgb.train(params, dtrain, 10000, watchlist, feval=evalerror,
+                    early_stopping_rounds=100, evals_result=evals)
+
+
+
+
 # testing = test.drop("id", 1)
 
 

@@ -29,8 +29,8 @@ training = train.merge(key)
 training = training.merge(weather)
 
 
-target = training["units"].apply(lambda x: math.log(1 + x))
-training = training.drop(["units", "date", 'month', 'day'], 1).values
+target = training["units"]
+training = training.drop(["units", 'date'], 1).values
 
 scaler = StandardScaler()
 training = scaler.fit_transform(training)
@@ -40,16 +40,16 @@ test = pd.read_csv('../data/test.csv')
 
 testing = test.merge(key)
 testing = testing.merge(weather)
-testing = testing.drop(["date", 'month', 'day'], 1).values
+testing = testing.drop(["date"], 1).values
 
 testing = scaler.transform(testing)
 
 random_state = 42
 
-model = 'rf' #RandomForest
+# model = 'rf' #RandomForest
 #model = 'gb' #GradientBoosting
-# model = 'xgb' #eXtremeGradient Boosting
-#model = 'xgbt'
+model = 'xgb' #eXtremeGradient Boosting
+# model = 'xgbt'
 #model = 'svm'
 
 
@@ -61,8 +61,9 @@ def make_submission(m, test1, filename):
     submission = pd.DataFrame(prediction)
     submission.columns = ['units']
 
-    submission['units'] = submission['units'].apply(lambda x: math.exp(x) - 1)
-    submission['id'] = test[["store_nbr", "item_nbr", "date"]].apply(merge_data)
+    submission['units'] = submission['units']
+    submission[submission['units'] < 0]['units'] = 0
+    submission['id'] = test[["store_nbr", "item_nbr", "date"]].apply(merge_data, 1)
     submission.to_csv(os.path.join('predictions', filename), index=False)
 
 try:
