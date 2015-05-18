@@ -15,7 +15,6 @@ import os
 import cPickle as pickle
 import gzip
 import xgboost
-import gl_wrapper
 import numpy as np
 import math
 from sklearn.metrics import mean_squared_error
@@ -48,8 +47,8 @@ random_state = 42
 
 # model = 'rf' #RandomForest
 #model = 'gb' #GradientBoosting
-model = 'xgb' #eXtremeGradient Boosting
-# model = 'xgbt'
+# model = 'xgb' #eXtremeGradient Boosting
+model = 'xgbt'
 #model = 'svm'
 
 
@@ -95,13 +94,24 @@ elif model == 'xgb':
     method = 'xgb_{n_estimators}_md{md}'.format(md=params['max_depth'], n_estimators=params['n_estimators'])
     clf = xgboost.XGBCRegressor(**params)
 elif model == 'xgbt':
-    params = {'max_iterations': 300, 'max_depth': 8, 'min_child_weight': 4, 'row_subsample': 0.9, 'min_loss_reduction': 1, 'column_subsample': 0.8}
-    method = 'xgbt_{max_iterations}_max_depth{max_depth}_min_loss_reduction{min_loss_reduction}_min_child_weight{min_child_weight}_row_subsample{row_subsample}_column_subsample{column_subsample}'.format(max_depth=params['max_depth'],
+    import gl_wrapper
+    # params = {'max_iterations': 300, 'max_depth': 8, 'min_child_weight': 4, 'row_subsample': 0.9, 'min_loss_reduction': 1, 'column_subsample': 0.8}
+    # method = 'xgbt_{max_iterations}_max_depth{max_depth}_min_loss_reduction{min_loss_reduction}_min_child_weight{min_child_weight}_row_subsample{row_subsample}_column_subsample{column_subsample}'.format(max_depth=params['max_depth'],
+    #                                                                                               max_iterations=params['max_iterations'],
+    #                                                                                               min_loss_reduction=params['min_loss_reduction'],
+    #                                                                                               min_child_weight=params['min_child_weight'],
+    #                                                                                               row_subsample=params['row_subsample'],
+    #                                                                                               column_subsample=params['column_subsample'])
+
+    params = {'max_iterations': 300, 'min_loss_reduction': 1, 'step_size': 0.01}
+    method = 'xgbt_{max_iterations}_min_loss_reduction{min_loss_reduction}_step_size{step_size}}'.format(step_size=params['step_size'],
                                                                                                   max_iterations=params['max_iterations'],
                                                                                                   min_loss_reduction=params['min_loss_reduction'],
-                                                                                                  min_child_weight=params['min_child_weight'],
-                                                                                                  row_subsample=params['row_subsample'],
-                                                                                                  column_subsample=params['column_subsample'])
+                                                                                                  # min_child_weight=params['min_child_weight'],
+                                                                                                  # row_subsample=params['row_subsample'],
+                                                                                                  # column_subsample=params['column_subsample']
+                                                                                                  )
+
     clf = gl_wrapper.BoostedTreesClassifier(**params)
 
 elif model == 'svm':

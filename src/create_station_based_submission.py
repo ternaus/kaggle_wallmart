@@ -80,6 +80,8 @@ features = [
 
 predictions = []
 for station in range(1, 21):
+  if station == 5:
+    continue
   print 'station = ' + str(station)
   train_x = training[training['station_nbr'] == station]
   test_x = testing[testing['station_nbr'] == station]
@@ -94,23 +96,24 @@ for station in range(1, 21):
                                            max_iterations=300,
 #                                            max_depth=10,
 #                                            row_subsample=0.8,
-                                           min_loss_reduction=1,
-                                            step_size=0.01,
+#                                            min_loss_reduction=1,
+                                           step_size=0.01,
                                            validation_set=None)
   prediction_testing = model.predict(test_x)
   temp = pd.DataFrame()
   temp['units'] = prediction_testing
   test_x_pd = test_x.to_dataframe()
-  temp['id'] = test_x_pd[["store_nbr", "item_nbr", "date"]].apply(merge_data)
+
+  temp['id'] = test_x_pd[["store_nbr", "item_nbr", "date"]].apply(merge_data, 1)
 
   predictions += [temp]
 
-result = pd.concat(temp)
-result[result.units < 0]['units'] = 0
+result = pd.concat(predictions)
+result['units'] = result['units'].apply(lambda x: max(x, 0), 1)
 result.to_csv(os.path.join("predictions", "xgbt_stations_mean_ss0.01_mls1_mi300.csv"), index=False)
 
 result_int = result.copy()
 result_int['units'] = result_int['units'].astype(int)
-result_int.to_csv(os.path.join("predictions", "xgbt_stations_mean_ss0.01_mls1_mi300.csv"), index=False)
+result_int.to_csv(os.path.join("predictions", "xgbt_stations_mean_int_ss0.01_mls1_mi300.csv"), index=False)
 
 
