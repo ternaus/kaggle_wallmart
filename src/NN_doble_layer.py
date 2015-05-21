@@ -88,6 +88,14 @@ def merge_data(df):
     return ''.join([str(df["store_nbr"]), "_", str(df["item_nbr"]), "_", df["date"]])
 
 weather = pd.read_csv(os.path.join('..', "data", "weather_modified_3.csv"))
+
+#change some columns of weather
+
+# weather['sunrise'] = weather['sunrise'].apply(lambda x: math.log(1 + x), 1)
+# weather['sunset'] = weather['sunset'].apply(lambda x: math.log(1 + x), 1)
+# weather['sealevel'] = weather['sealevel'].apply(lambda x: math.log(1 + x), 1)
+
+
 train = pd.read_csv(os.path.join('..', "data", "train.csv"))
 key = pd.read_csv(os.path.join('..', "data", "key.csv"))
 test = pd.read_csv(os.path.join('..', "data", "test.csv"))
@@ -101,6 +109,12 @@ test_to_fit = test_new[test_new['units_mean'] != 0]
 weather_new = weather.merge(key)
 training = train_to_fit.merge(weather_new)
 testing = test_to_fit.merge(weather_new)
+
+def f(x):
+    return int(x.strip().split('-')[0])
+
+training['year'] = training['date'].apply(f)
+testing['year'] = testing['date'].apply(f)
 
 features = [
 #     'date',
@@ -154,7 +168,9 @@ features = [
             'BLSN',
             'SN',
             'SG',
-            'days']
+            'days',
+            'year'
+]
 
 for column in features:
 #     print column
