@@ -1,144 +1,144 @@
 from __future__ import division
 __author__ = 'Vladimir Iglovikov'
 
-from sklearn import cross_validation
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.ensemble import GradientBoostingRegressor
-
-from sklearn.svm import SVR
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import StandardScaler
-
-import pandas as pd
-from sklearn.calibration import CalibratedClassifierCV
-import os
-import cPickle as pickle
-import gzip
-import xgboost
+# import pandas as pd
 import numpy as np
-import math
-from sklearn.metrics import mean_squared_error
-
-print 'reading train'
-
-weather = pd.read_csv('../data/weather_new_md10.csv')
-train = pd.read_csv('../data/train.csv')
-key = pd.read_csv('../data/key.csv')
-training = train.merge(key)
-training = training.merge(weather)
-
-
-target = training["units"]
-training = training.drop(["units", 'date'], 1).values
-
-scaler = StandardScaler()
-training = scaler.fit_transform(training)
-
-print 'reading test'
-test = pd.read_csv('../data/test.csv')
-
-testing = test.merge(key)
-testing = testing.merge(weather)
-testing = testing.drop(["date"], 1).values
-
-testing = scaler.transform(testing)
-
-random_state = 42
-
-# model = 'rf' #RandomForest
-#model = 'gb' #GradientBoosting
-# model = 'xgb' #eXtremeGradient Boosting
-model = 'xgbt'
-#model = 'svm'
-
+import os
+import graphlab as gl
+from graphlab import SFrame
+import pandas as pd
 
 def merge_data(df):
     return ''.join([str(df["store_nbr"]), "_", str(df["item_nbr"]), "_", df["date"]])
 
-def make_submission(m, test1, filename):
-    prediction = m.predict(test1)
-    submission = pd.DataFrame(prediction)
-    submission.columns = ['units']
-
-    submission['units'] = submission['units']
-    submission[submission['units'] < 0]['units'] = 0
-    submission['id'] = test[["store_nbr", "item_nbr", "date"]].apply(merge_data, 1)
-    submission.to_csv(os.path.join('predictions', filename), index=False)
-
-try:
-    os.mkdir('predictions')
-except:
-    pass
 
 
-if model == 'rf':
-    params =  {'max_features': 9,
-               'min_samples_split': 1,
-               'n_estimators': 100,
-               'max_depth': None,
-               'min_samples_leaf': 7,
-               'n_jobs': -1,
-               'random_state': random_state}
+ind = False
 
-    method = 'rf_{n_estimators}_max_features{max_features}_min_samples_split{min_samples_split}_max_depth{max_depth}_min_samples_leaf{min_samples_leaf}'.format(n_estimators=params['n_estimators'],  max_depth=params['max_depth'], min_samples_leaf=params['min_samples_leaf'], max_features=params['max_features'], min_samples_split=params['min_samples_split'])
-    clf = RandomForestRegressor(**params)
-elif model == 'gb':
-    params = {'n_estimators': 1000,
-              'random_state': random_state}
-    method = 'gb_{n_estimators}'.format(n_estimators=params['n_estimators'])
-    clf = GradientBoostingRegressor(**params)
-elif model == 'xgb':
-    params = {'max_depth': 10,
-                    'n_estimators': 100}
+weather = SFrame.read_csv(os.path.join('..', "data", "weather_modified_3.csv"))
 
-    method = 'xgb_{n_estimators}_md{md}'.format(md=params['max_depth'], n_estimators=params['n_estimators'])
-    clf = xgboost.XGBCRegressor(**params)
-elif model == 'xgbt':
-    import gl_wrapper
-    # params = {'max_iterations': 300, 'max_depth': 8, 'min_child_weight': 4, 'row_subsample': 0.9, 'min_loss_reduction': 1, 'column_subsample': 0.8}
-    # method = 'xgbt_{max_iterations}_max_depth{max_depth}_min_loss_reduction{min_loss_reduction}_min_child_weight{min_child_weight}_row_subsample{row_subsample}_column_subsample{column_subsample}'.format(max_depth=params['max_depth'],
-    #                                                                                               max_iterations=params['max_iterations'],
-    #                                                                                               min_loss_reduction=params['min_loss_reduction'],
-    #                                                                                               min_child_weight=params['min_child_weight'],
-    #                                                                                               row_subsample=params['row_subsample'],
-    #                                                                                               column_subsample=params['column_subsample'])
-
-    params = {'max_iterations': 300, 'min_loss_reduction': 1, 'step_size': 0.01}
-    method = 'xgbt_{max_iterations}_min_loss_reduction{min_loss_reduction}_step_size{step_size}}'.format(step_size=params['step_size'],
-                                                                                                  max_iterations=params['max_iterations'],
-                                                                                                  min_loss_reduction=params['min_loss_reduction'],
-                                                                                                  # min_child_weight=params['min_child_weight'],
-                                                                                                  # row_subsample=params['row_subsample'],
-                                                                                                  # column_subsample=params['column_subsample']
-                                                                                                  )
-
-    clf = gl_wrapper.BoostedTreesClassifier(**params)
-
-elif model == 'svm':
-    params = {'C': 5, 'cache_size': 2048}
-    method = 'svm_{C}'.format(C=params['C'])
-    clf = SVR(**params)
-
-print 'fit the model'
-
-fit = clf.fit(training, target)
-
-print 'calculating score'
-score = mean_squared_error(target, fit.predict(training))
-print score
+if not ind:
+  test = SFrame.read_csv(os.path.join('..', "data", "test.csv"))
 
 
-make_submission(clf, testing, method + '.csv')
+train = SFrame.read_csv(os.path.join('..', "data", "train.csv"))
+key = SFrame.read_csv(os.path.join('..', "data", "key.csv"))
 
+zero_items = SFrame.read_csv(os.path.join('..', 'data', 'zero_items_solid.csv'))
 
+train_new = train.join(zero_items)
 
-try:
-    os.mkdir('logs')
-except:
-    pass
+if not ind:
+  test_new = test.join(zero_items)
 
-#save score to log
-fName = open(os.path.join('logs', method + '.log'), 'w')
-print >> fName, 'mean squared error on the training set is: ' + str(score)
-print >> fName, score
-fName.close()
+train_to_fit = train_new[train_new['units_mean'] != 0]
+
+if not ind:
+  test_to_fit = test_new[test_new['units_mean'] != 0]
+
+weather_new = weather.join(key)
+training = train_to_fit.join(weather_new)
+
+if not ind:
+  testing = test_to_fit.join(weather_new)
+
+def f(x):
+    return int(x.strip().split('-')[0])
+
+training['year'] = training['date'].apply(f)
+
+if not ind:
+  testing['year'] = testing['date'].apply(f)
+
+features = [
+#     'date',
+            'store_nbr',
+            'item_nbr',
+#             'units',
+#             'units_mean',
+#             'station_nbr',
+            'tmax',
+            'tmin',
+            'tavg',
+            'depart',
+            'dewpoint',
+            'wetbulb',
+            'heat',
+            'cool',
+            'sunrise',
+            'sunset',
+            'snowfall',
+            'preciptotal',
+            'stnpressure',
+            'sealevel',
+            'resultspeed',
+            'resultdir',
+            'avgspeed',
+            'HZ',
+            'FU',
+            'UP',
+#             'TSSN',
+            'VCTS',
+            'DZ',
+            'BR',
+            'FG',
+            'BCFG',
+            'DU',
+            'FZRA',
+            'TS',
+            'RA',
+            'PL',
+            'GS',
+            'GR',
+            'FZDZ',
+            'VCFG',
+            'PRFG',
+            'FG+',
+            'TSRA',
+            'FZFG',
+            'BLDU',
+            'MIFG',
+            'SQ',
+            'BLSN',
+            'SN',
+            'SG',
+            'days',
+            'year']
+
+for column in features:
+  a = training[column].mean()
+  training = training.fillna(column, a)
+  if not ind:
+    testing = testing.fillna(column, a)
+
+import math
+training['units'] = training['units'].apply(lambda x: math.log(1 + x))
+
+sf_train, sf_test = training.random_split(0.7, seed=5)
+
+params = {'target': 'units',
+          'features':features,
+          'max_iterations': 500,
+          'max_depth': 8,
+          'min_loss_reduction':1,
+          'step_size': 0.1,
+          'row_subsample': 0.8,
+          'column_subsample': 0.5,
+           }
+
+if not ind:
+  model = gl.boosted_trees_regression.create(sf_train, validation_set=sf_test, **params)
+else:
+  model = gl.boosted_trees_regression.create(training, validation_set=None, **params)
+  prediction_testing = model.predict(testing)
+  temp = pd.DataFrame()
+  temp['id'] = testing[["store_nbr", "item_nbr", "date"]].to_dataframe().apply(merge_data, 1)
+  temp['units'] = prediction_testing.apply(lambda x: math.exp(x) - 1)
+  submission = pd.read_csv('../data/sampleSubmission.csv')
+  result = temp.merge(submission, on=['id'], how='outer')
+  result.columns = ['id', 'units', 'units_x']
+  result = result.drop('units_x', 1)
+  result['units'] = result['units'].fillna(0)
+  result['units'] = result['units'].apply(lambda x: max(0, x))
+  result.to_csv(os.path.join("predictions", "full_mean_filtered_solid_log_xgbt_mls1_ss01_md8_rs_08_station_nbr_added_89dropped.csv"), index=False)
+
