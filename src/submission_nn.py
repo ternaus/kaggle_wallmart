@@ -91,7 +91,7 @@ def make_submission(m, test1, filename):
     submission.columns = ['units']
 
     submission['units'] = submission['units'].apply(lambda x: math.exp(x) - 1)
-    submission['id'] = test[["store_nbr", "item_nbr", "date"]].apply(merge_data, 1)
+    submission['id'] = test1[["store_nbr", "item_nbr", "date"]].apply(merge_data, 1)
     submission.to_csv(os.path.join('predictions', filename), index=False)
 
 try:
@@ -101,12 +101,88 @@ except:
 
 
 print 'reading train'
+#
+# weather = pd.read_csv('../data/weather_new3_mi100_md10.csv')
+# train = pd.read_csv('../data/train.csv')
+# key = pd.read_csv('../data/key.csv')
+# training = train.merge(key)
+# training = training.merge(weather)
+#
 
-weather = pd.read_csv('../data/weather_new3_mi100_md10.csv')
-train = pd.read_csv('../data/train.csv')
-key = pd.read_csv('../data/key.csv')
-training = train.merge(key)
-training = training.merge(weather)
+weather = pd.read_csv(os.path.join('..', "data", "weather_modified_3.csv"))
+train = pd.read_csv(os.path.join('..', "data", "train.csv"))
+key = pd.read_csv(os.path.join('..', "data", "key.csv"))
+test = pd.read_csv(os.path.join('..', "data", "test.csv"))
+zero_items = pd.read_csv(os.path.join('..', 'data', 'zero_items_solid.csv'))
+
+train_new = train.merge(zero_items)
+test_new = test.merge(zero_items)
+train_to_fit = train_new[train_new['units_mean'] != 0]
+test_to_fit = test_new[test_new['units_mean'] != 0]
+
+weather_new = weather.merge(key)
+training = train_to_fit.merge(weather_new)
+testing = test_to_fit.merge(weather_new)
+
+features = [
+#     'date',
+#             'store_nbr',
+            'item_nbr',
+#             'units',
+#             'units_mean',
+            'station_nbr',
+            'tmax',
+            'tmin',
+            'tavg',
+            'depart',
+            'dewpoint',
+            'wetbulb',
+            'heat',
+            'cool',
+            'sunrise',
+            'sunset',
+            'snowfall',
+            'preciptotal',
+            'stnpressure',
+            'sealevel',
+            'resultspeed',
+            'resultdir',
+            'avgspeed',
+            'HZ',
+            'FU',
+            'UP',
+            'TSSN',
+            'VCTS',
+            'DZ',
+            'BR',
+            'FG',
+            'BCFG',
+            'DU',
+            'FZRA',
+            'TS',
+            'RA',
+            'PL',
+            'GS',
+            'GR',
+            'FZDZ',
+            'VCFG',
+            'PRFG',
+            'FG+',
+            'TSRA',
+            'FZFG',
+            'BLDU',
+            'MIFG',
+            'SQ',
+            'BLSN',
+            'SN',
+            'SG',
+            'days']
+
+for column in features:
+#     print column
+    a = training[column].mean()
+    training[column] = training[column].fillna(a)
+    testing[column] = testing[column].fillna(a)
 
 
 ly = training["units"].apply(lambda x: math.log(1 + x)).values.astype(np.float32)
@@ -115,10 +191,13 @@ ym = ly.mean()
 ly.shape = (ly.shape[0], 1)
 ys = ly.std()
 
-training = training.drop(["units", "date"], 1).values
+# training = training.drop(["units", "date"], 1).values
+
+X = training[features]
 
 scaler = StandardScaler()
-training = scaler.fit_transform(training)
+# training = scaler.fit_transform(training)
+X = scaler.fit_transform(X)
 #
 # print 'reading test'
 # test = pd.read_csv('../data/test.csv')
@@ -144,6 +223,15 @@ method = 'nn'
 
 
 print 'fit the model'
+# layers0 = [('input', InputLayer),
+#            ('dense0', DenseLayer),
+#            ('dropout', DropoutLayer),
+#            ('dense1', DenseLayer),
+#            # ('dropout', DropoutLayer),
+#            # ('dense2', DenseLayer),
+#            ('output', DenseLayer),
+#            ]
+
 layers0 = [('input', InputLayer),
            ('dense0', DenseLayer),
            ('dropout', DropoutLayer),
@@ -153,8 +241,10 @@ layers0 = [('input', InputLayer),
            ('output', DenseLayer),
            ]
 
-num_units = 200
-num_features = training.shape[1]
+
+
+num_units = 100
+num_features = X.shape[1]
 
 clf = NeuralNet(layers=layers0,
 
@@ -170,7 +260,7 @@ clf = NeuralNet(layers=layers0,
                  regression=True,
 
                  update=nesterov_momentum,
-                 update_learning_rate=0.001,
+                 update_learning_rate=0.01,
                  update_momentum=0.9,
                  # allow_input_downcast=True,
 
@@ -178,6 +268,6 @@ clf = NeuralNet(layers=layers0,
                  verbose=1,
                  max_epochs=100)
 
-clf.fit(training.astype(np.float32), (ly-ym) / ys)
+clf.fit(X.astype(np.float32), (ly-ym) / ys)
 
 # make_submission(clf, testing, method + '.csv')
