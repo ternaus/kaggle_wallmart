@@ -184,6 +184,8 @@ net1 = NeuralNet(
         ('hidden0', layers.DenseLayer),
         ('dropout', DropoutLayer),
         ('hidden1', layers.DenseLayer),
+        ('dropout', DropoutLayer),
+        ('hidden2', layers.DenseLayer),
         ('output', layers.DenseLayer),
         ],
     # layer parameters:
@@ -191,6 +193,7 @@ net1 = NeuralNet(
     hidden0_num_units=200,  # number of units in hidden layer
     dropout_p=0.5,
     hidden1_num_units=200,  # number of units in hidden layer
+    hidden2_num_units=200,  # number of units in hidden layer
     output_nonlinearity=None,  # output layer uses identity function
     output_num_units=1,  # 1 target values
 
