@@ -122,12 +122,17 @@ from lasagne import layers
 net1 = NeuralNet(
     layers=[  # three layers: one hidden layer
         ('input', layers.InputLayer),
-        ('hidden', layers.DenseLayer),
+        ('dropout', DropoutLayer),
+        ('hidden0', layers.DenseLayer),
+        ('dropout', DropoutLayer),
+        ('hidden1', layers.DenseLayer),
         ('output', layers.DenseLayer),
         ],
     # layer parameters:
     input_shape=(None, num_features),  # 96x96 input pixels per batch
-    hidden_num_units=50,  # number of units in hidden layer
+    hidden0_num_units=50,  # number of units in hidden layer
+    dropout_p=0.5,
+    hidden1_num_units=50,  # number of units in hidden layer
     output_nonlinearity=None,  # output layer uses identity function
     output_num_units=1,  # 1 target values
 
@@ -136,7 +141,7 @@ net1 = NeuralNet(
     update_learning_rate=0.0001,
     update_momentum=0.9,
     eval_size=0.2,
-    max_epochs=30,  # we want to train this many epochs
+    max_epochs=50,  # we want to train this many epochs
     verbose=1,
     regression=True,  # flag to indicate we're dealing with regression problem
     )
@@ -170,10 +175,11 @@ legend()
 xlabel("epoch")
 ylabel("loss")
 # ylim(1e-3, 1e-2)
-# yscale("log")
-savefig('logs/net1.eps', bbox_inches='tight')
+yscale("log")
+savefig('logs/double.eps', bbox_inches='tight')
+ylim(ymax=1, tmin=0)
 
-fName = open('logs/net1.log', 'w')
+fName = open('logs/double.log', 'w')
 print >> fName, 'train mean = ', ym
 print >> fName, 'train std = ', ys
 fName.close()
