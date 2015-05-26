@@ -91,10 +91,11 @@ weather = pd.read_csv(os.path.join('..', "data", "weather_modified_3.csv"))
 
 #change some columns of weather
 
-# weather['sunrise'] = weather['sunrise'].apply(lambda x: math.log(1 + x), 1)
-# weather['sunset'] = weather['sunset'].apply(lambda x: math.log(1 + x), 1)
-# weather['sealevel'] = weather['sealevel'].apply(lambda x: math.log(1 + x), 1)
-
+weather['sunrise'] = weather['sunrise'].apply(lambda x: math.log(1 + x), 1)
+weather['sunset'] = weather['sunset'].apply(lambda x: math.log(1 + x), 1)
+weather['sealevel'] = weather['sealevel'].apply(lambda x: math.log(1 + x), 1)
+weather['resultspeed'] = weather['resultspeed'].apply(lambda x: math.log(1 + x), 1)
+weather['resultdir'] = weather['resultdir'].apply(lambda x: math.log(1 + x), 1)
 
 train = pd.read_csv(os.path.join('..', "data", "train.csv"))
 key = pd.read_csv(os.path.join('..', "data", "key.csv"))
